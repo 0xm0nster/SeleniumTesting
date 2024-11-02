@@ -4,6 +4,7 @@ from selenium.webdriver.firefox.webdriver import WebDriver
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import NoSuchElementException
 import time
 
 class MySeleniumTests(StaticLiveServerTestCase):
@@ -44,6 +45,7 @@ class MySeleniumTests(StaticLiveServerTestCase):
         # testejem que hem entrat a l'admin panel comprovant el títol de la pàgina
         self.assertEqual( self.selenium.title , "Site administration | Django site admin" )
         self.selenium.find_element(By.XPATH,'/html/body/div/div/main/div/div[1]/div[1]/table/tbody/tr[2]/td[1]/a').click()
+        #Creem el nou Usuari
         username_camp = self.selenium.find_element(By.XPATH,'//*[@id="id_username"]')
         username_camp.send_keys('isardstaff')
         password_camp = self.selenium.find_element(By.XPATH,'//*[@id="id_password1"]')
@@ -53,20 +55,24 @@ class MySeleniumTests(StaticLiveServerTestCase):
         self.selenium.find_element(By.XPATH,'/html/body/div/div/main/div/div/form/div/div/input[1]').click()
         self.selenium.find_element(By.XPATH,'//*[@id="id_is_staff"]').click()
         camp_permisos = self.selenium.find_element(By.XPATH,'//*[@id="id_user_permissions_input"]')
+        #Afegim permisos al usuari
         camp_permisos.send_keys('Authentication and authorization can add user',Keys.RETURN)
         camp_permisos.send_keys('Authentication and authorization can change user',Keys.RETURN)
         camp_permisos.send_keys('Authentication and authorization can view user',Keys.RETURN)
-        #self.selenium.find_element(By.XPATH,'//*[@id="id_user_permissions_add_link"]').click()
         self.selenium.find_element(By.XPATH,'/html/body/div[1]/div/main/div/div/form/div/div/input[1]').click()
         self.selenium.find_element(By.XPATH,'/html/body/div[1]/header/div[2]/form/button').click()
         self.selenium.find_element(By.XPATH,'/html/body/div/div/main/div/p[2]/a').click()
+        #Loguejem com el nou usuari i testejem permisos
         username_input = self.selenium.find_element(By.NAME,"username")
         username_input.send_keys('isardstaff')
         password_input = self.selenium.find_element(By.NAME,"password")
         password_input.send_keys('contrasenyastaff')
         self.selenium.find_element(By.XPATH,'//input[@value="Log in"]').click()
-        crear_user = self.selenium.find_element(By.XPATH, '/html/body/div/div/main/div/div[1]/div/table/tbody/tr/td[1]/a')
-        self.assertTrue(crear_user.is_displayed(), "No s'ha trobat el + per afegir usuaris")
+        try:
+            crear_user = self.selenium.find_element(By.CLASS_NAME, 'addlink')
+            self.assertTrue(crear_user.is_displayed(), "No s'ha trobat addlink")
+        except NoSuchElementException:
+            self.fail("No s'ha trobat addlink, test fallat sense excepció.")
         questions_element = self.selenium.find_elements(By.XPATH, "//*[contains(text(), 'Questions')]")
         self.assertEqual(len(questions_element), 0, "S'ha trobat Questions")
         
